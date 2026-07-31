@@ -154,6 +154,52 @@ test("AC-DASH-5: a stored HTML/JS payload renders escaped — inert, never execu
   expect(html).not.toContain("<script>alert(1)</script>");
 });
 
+test("SECURITY: the authenticated dashboard is never cacheable", async ({
+  request,
+}) => {
+  const a = await newUser(request);
+  await createLink(request, a.cookie, "https://example.com/private");
+  const res = await request.get("/dashboard", {
+    headers: { cookie: a.cookie },
+  });
+  expect(res.status()).toBe(200);
+  // One tenant's link table behind any shared cache is one tenant's data
+  // served to another. The value is currently the framework's default for an
+  // uncached dynamic route — asserted here so a later `revalidate`, a
+  // `"use cache"` wrapper, or a config change cannot silently loosen it.
+  const cacheControl = res.headers()["cache-control"] ?? "";
+  expect(cacheControl).toContain("no-store");
+  expect(cacheControl).toContain("private");
+});
+
+test("SECURITY: a stored slug that fails the shape guard is not rendered into an href", async ({
+  request,
+}) => {
+  const a = await newUser(request);
+  const me = await request.get("/api/me", { headers: { cookie: a.cookie } });
+  const userId = ((await me.json()) as { user: { id: string } }).user.id;
+
+  // Seeded directly — the write side would never mint this. The renderer must
+  // not take stored bytes into a URL sink just because it usually generates them.
+  const hostile = "../../evil?x=#";
+  const db = new Client({ connectionString: DATABASE_URL });
+  await db.connect();
+  try {
+    await db.query(
+      `INSERT INTO link(id, user_id, slug, target_url) VALUES ($1, $2, $3, 'https://example.com/ok')`,
+      [randomUUID(), userId, hostile],
+    );
+  } finally {
+    await db.end();
+  }
+
+  const dash = await request.get("/dashboard", {
+    headers: { cookie: a.cookie },
+  });
+  const html = await dash.text();
+  expect(html).not.toContain('href="/r/../../evil');
+});
+
 test("AC-DASH-6: the dashboard is composed from design-system components, not ad-hoc markup", async ({
   request,
 }) => {

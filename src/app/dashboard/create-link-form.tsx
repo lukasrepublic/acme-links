@@ -43,6 +43,10 @@ export function CreateLinkForm() {
       } else {
         setError(body?.error ?? "something went wrong");
       }
+    } catch {
+      // fetch REJECTS (it does not resolve) on DNS/TLS/offline/abort. Without
+      // this the rejection escapes the handler and the form silently no-ops.
+      setError("could not reach the server");
     } finally {
       setBusy(false);
     }

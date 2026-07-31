@@ -18,6 +18,7 @@ import {
   Shell,
   Table,
 } from "@/design-system/components";
+import { isValidSlug } from "@/lib/links/slug";
 import { CreateLinkForm } from "./create-link-form";
 import { LogoutButton } from "./logout-button";
 
@@ -30,7 +31,7 @@ export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
 
-  const rows = await db
+  const stored = await db
     .select({
       slug: link.slug,
       targetUrl: link.targetUrl,
@@ -41,6 +42,11 @@ export default async function DashboardPage() {
     .where(eq(link.userId, session.user.id))
     .orderBy(desc(link.createdAt), desc(link.id))
     .limit(PAGE_SIZE);
+
+  // The destination is rendered as escaped text, never as an href — but the
+  // slug IS interpolated into one, so it gets the same read-side guard the
+  // resolver applies rather than being trusted because we generated it.
+  const rows = stored.filter((row) => isValidSlug(row.slug));
 
   return (
     <Shell
@@ -96,7 +102,7 @@ export default async function DashboardPage() {
                 {rows.map((row) => (
                   <tr key={row.slug}>
                     <td>
-                      <a href={`/r/${row.slug}`}>
+                      <a href={`/r/${encodeURIComponent(row.slug)}`}>
                         <Mono>/r/{row.slug}</Mono>
                       </a>
                     </td>
