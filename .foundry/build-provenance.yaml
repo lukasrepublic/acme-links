@@ -16,7 +16,7 @@
 # The printed values must equal the ones recorded below. They did when this file was
 # written — that check is the whole point of the file.
 workspace: lukasrepublic/agentic-handbook
-foundry_authorized_against: agentic-handbook@96bf3b256250eb8b9ff9bb9ed6f9470a1d521cfd
+foundry_authorized_against: agentic-handbook@1c30008b89309c9a26870e89dac8d2feaf3bd8e5
 
 authorizations:
   - atom: resolve-redirect
