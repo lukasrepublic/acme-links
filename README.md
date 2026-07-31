@@ -44,6 +44,13 @@ make build && make journeys          # all four atoms' journeys
 npx playwright test --grep AC-RESOLVE-1   # just the money-shot checkpoint
 ```
 
+## How it was built
+
+[**The full build journey**](https://github.com/lukasrepublic/agentic-handbook/blob/main/docs/BUILD-JOURNEY.md)
+— every command and prompt that produced this repo, in order: workspace setup, requirements,
+audits, the operator freeze, buildout, security review, the merge floor, and the provenance pin.
+Including what went wrong.
+
 ## The governed history (checkpoints)
 
 Each tutorial step ends at a tagged, checkout-able commit:
