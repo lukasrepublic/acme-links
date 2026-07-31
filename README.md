@@ -3,7 +3,7 @@
 A link shortener with accounts — and the worked example for
 [**Agentic Foundry**](https://github.com/lukasrepublic/agentic-foundry). This repo was built
 from an empty directory to a governed, live-proven merge by following the
-[7-step tutorial](https://github.com/lukasrepublic/agentic-handbook/blob/main/docs/tutorial/README.md)
+[7-step tutorial](https://github.com/lukasrepublic/agentic-handbook/blob/main/docs/example-acme-links/README.md)
 in the [`agentic-handbook`](https://github.com/lukasrepublic/agentic-handbook) template — the
 specs, acceptance contracts, design system, and every prompt used live there, under
 [`specs/features/acme-links/`](https://github.com/lukasrepublic/agentic-handbook/tree/main/specs/features/acme-links).
@@ -46,7 +46,7 @@ npx playwright test --grep AC-RESOLVE-1   # just the money-shot checkpoint
 
 ## How it was built
 
-[**The full build journey**](https://github.com/lukasrepublic/agentic-handbook/blob/main/docs/BUILD-JOURNEY.md)
+[**The full build journey**](https://github.com/lukasrepublic/agentic-handbook/blob/main/docs/example-acme-links/BUILD-JOURNEY.md)
 — every command and prompt that produced this repo, in order: workspace setup, requirements,
 audits, the operator freeze, buildout, security review, the merge floor, and the provenance pin.
 Including what went wrong.
