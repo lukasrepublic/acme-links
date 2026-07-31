@@ -1,0 +1,52 @@
+# Cross-repo build provenance — the multi-repo pin (tutorial step 7).
+#
+# Each merged atom in THIS repo pins the exact operator-authorized spec + contract it was
+# built against, in the workspace that authorized it. Verify it yourself — nothing here
+# asks to be taken on faith:
+#
+#   git clone https://github.com/lukasrepublic/agentic-handbook
+#   cd agentic-handbook && git checkout <foundry_authorized_against>
+#   python3 - <<'EOF'
+#   import sys; sys.path.insert(0, "<plugin>/scripts")
+#   import foundry_contract as fc
+#   print(fc.spec_sha256("specs/features/acme-links/auth/feat-handbook-acme-links-auth.md"))
+#   print(fc.contract_sha256("specs/features/acme-links/auth/acceptance-contract.yaml"))
+#   EOF
+#
+# The printed values must equal the ones recorded below. They did when this file was
+# written — that check is the whole point of the file.
+workspace: lukasrepublic/agentic-handbook
+foundry_authorized_against: agentic-handbook@96bf3b256250eb8b9ff9bb9ed6f9470a1d521cfd
+
+authorizations:
+  - atom: resolve-redirect
+    spec_ref: specs/features/acme-links/resolve-redirect/feat-handbook-acme-links-resolve-redirect.md
+    spec_sha256: 1549ec319ca886f5238d574e0ca30bf932499ef87710d7af547e2d0ece6bc419
+    contract_sha256: 5d9788dd9644599cd08ef85347da72391c805c79eba699b03f2d5eb6c247a5ba
+    auth_seq: 2
+    supersedes: 9e8c1976f9518f2007c5a73e836c0413be470a2f09cbbc8b82a8732cb2e46943
+    merged_pr: 1
+
+  - atom: auth
+    spec_ref: specs/features/acme-links/auth/feat-handbook-acme-links-auth.md
+    spec_sha256: 904bfea09118a247284c5263a3118697eb2150836e954b4e74b14b7f564ee9c2
+    contract_sha256: 66a919fb037714f0869712d1f70b73b1592299d54d83e75ea2ae58bc40f94f0d
+    auth_seq: 2
+    supersedes: 928be1f07a3989228c6ac18ce9c077b7bec662b137920a040b68e743b15fff44
+    merged_pr: 2
+
+  - atom: create-link
+    spec_ref: specs/features/acme-links/create-link/feat-handbook-acme-links-create-link.md
+    spec_sha256: e55cc3bbb1ccbe1d9752065688dae1bd8ae40117d78aec88ebdbd7cc3b73a3a3
+    contract_sha256: c1407701bc125bc1c4df104a446cb9c43acebaefd63e3313754290fea85a86e3
+    auth_seq: 2
+    supersedes: ad50d3d10d73c8073c735903d255c9215bf4016e3724ffba1f7cc46100cf1b20
+    merged_pr: 3
+
+  - atom: dashboard
+    spec_ref: specs/features/acme-links/dashboard/feat-handbook-acme-links-dashboard.md
+    spec_sha256: e93600e07de971481a61e6d355b96393e4470d69c69cbc9f3a95fcc598ba539d
+    contract_sha256: 23b9b889845fb94689dddbc719381f49c7501e89589d1d6edb1e271e6a4b25d9
+    auth_seq: 3
+    supersedes: 8327c082ddfd815bbe01359cb4f8ff935030383a669207b8ca9bd402c0c75e8b
+    merged_pr: 4
