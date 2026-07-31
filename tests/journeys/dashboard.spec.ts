@@ -181,7 +181,9 @@ test("SECURITY: a stored slug that fails the shape guard is not rendered into an
 
   // Seeded directly — the write side would never mint this. The renderer must
   // not take stored bytes into a URL sink just because it usually generates them.
-  const hostile = "../../evil?x=#";
+  // Unique per run: a fixed literal makes the journey pass once against a fresh
+  // database and fail on every rerun — green in CI, broken for anyone running it twice.
+  const hostile = `../../evil-${randomUUID().slice(0, 8)}?x=#`;
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
   try {
@@ -197,6 +199,7 @@ test("SECURITY: a stored slug that fails the shape guard is not rendered into an
     headers: { cookie: a.cookie },
   });
   const html = await dash.text();
+  expect(html).not.toContain(`href="/r/${hostile}`);
   expect(html).not.toContain('href="/r/../../evil');
 });
 
