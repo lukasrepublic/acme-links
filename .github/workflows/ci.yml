@@ -1,0 +1,52 @@
+# The merge floor. Every PR must build clean and pass the contract journeys —
+# the checks that drive the RUNNING app at the seams the acceptance contracts
+# name. A red journey blocks the merge; that is the point.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-journeys:
+    name: build + contract journeys
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: acme
+          POSTGRES_PASSWORD: acme
+          POSTGRES_DB: acme
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://acme:acme@localhost:5433/acme
+      # CI-only value for a throwaway database — not a real credential.
+      BETTER_AUTH_SECRET: ci-only-session-signing-value
+      BASE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Create the schema
+        run: npm run db:push
+      - name: Build
+        run: npm run build
+      - name: Contract journeys
+        run: npm run journeys

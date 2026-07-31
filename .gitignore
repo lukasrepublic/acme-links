@@ -1,0 +1,17 @@
+# deps / build
+node_modules/
+.next/
+out/
+
+# env — never commit real credentials; copy .env.example
+.env
+.env.local
+
+# playwright
+test-results/
+playwright-report/
+
+# misc
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
