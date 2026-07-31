@@ -1,18 +1,34 @@
 // POST /signup — create an account + establish a session (AC-AUTH-1..3, -9).
 // GET /signup — send browsers to the form.
 import { auth } from "@/lib/auth";
-import { jsonWithCookies, readCredentials } from "@/lib/auth/http";
+import {
+  bodyTooLarge,
+  isCrossSiteRequest,
+  jsonWithCookies,
+  readCredentials,
+} from "@/lib/auth/http";
 import {
   clientKey,
   isRateLimited,
   recordFailure,
 } from "@/lib/auth/rate-limit";
 
-export async function GET(req: Request) {
-  return Response.redirect(new URL("/signup/form", req.url), 307);
+function appBase(): string {
+  // Configuration, never the request's Host header (see /login).
+  return process.env.BASE_URL ?? "http://localhost:3000";
+}
+
+export async function GET() {
+  return Response.redirect(new URL("/signup/form", appBase()), 307);
 }
 
 export async function POST(req: Request) {
+  if (isCrossSiteRequest(req)) {
+    return jsonWithCookies({ error: "cross-site request refused" }, 403);
+  }
+  if (bodyTooLarge(req)) {
+    return jsonWithCookies({ error: "request body too large" }, 413);
+  }
   const creds = await readCredentials(req);
   if (!creds) {
     return jsonWithCookies({ error: "email and password are required" }, 400);
@@ -23,7 +39,12 @@ export async function POST(req: Request) {
   }
   // asResponse: failures come back AS the Response (nothing is thrown).
   const res = await auth.api.signUpEmail({
-    body: { name: creds.email, email: creds.email, password: creds.password },
+    body: {
+      name: creds.email.split("@")[0],
+      email: creds.email,
+      password: creds.password,
+    },
+    headers: req.headers,
     asResponse: true,
   });
   if (res.ok) {

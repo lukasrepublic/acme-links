@@ -1,6 +1,11 @@
 // POST /login — establish a session (AC-AUTH-4, -5, -9). GET /login — the form.
 import { auth } from "@/lib/auth";
-import { jsonWithCookies, readCredentials } from "@/lib/auth/http";
+import {
+  bodyTooLarge,
+  isCrossSiteRequest,
+  jsonWithCookies,
+  readCredentials,
+} from "@/lib/auth/http";
 import {
   clientKey,
   isRateLimited,
@@ -11,11 +16,23 @@ import {
 // "no such account" vs "wrong password".
 const INVALID = { error: "invalid email or password" };
 
-export async function GET(req: Request) {
-  return Response.redirect(new URL("/login/form", req.url), 307);
+export async function GET() {
+  return Response.redirect(new URL("/login/form", appBase()), 307);
+}
+
+function appBase(): string {
+  // Built from configuration, never from the request's Host header — a
+  // spoofed Host would otherwise redirect visitors to an attacker's origin.
+  return process.env.BASE_URL ?? "http://localhost:3000";
 }
 
 export async function POST(req: Request) {
+  if (isCrossSiteRequest(req)) {
+    return jsonWithCookies({ error: "cross-site request refused" }, 403);
+  }
+  if (bodyTooLarge(req)) {
+    return jsonWithCookies({ error: "request body too large" }, 413);
+  }
   const creds = await readCredentials(req);
   if (!creds) return jsonWithCookies(INVALID, 401);
   const key = clientKey(req, creds.email);
@@ -25,6 +42,7 @@ export async function POST(req: Request) {
   // asResponse: failures come back AS the Response (nothing is thrown).
   const res = await auth.api.signInEmail({
     body: { email: creds.email, password: creds.password },
+    headers: req.headers,
     asResponse: true,
   });
   if (res.ok) {

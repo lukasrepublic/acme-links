@@ -31,8 +31,6 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://acme:acme@localhost:5433/acme
-      # CI-only value for a throwaway database — not a real credential.
-      BETTER_AUTH_SECRET: ci-only-session-signing-value
       BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -40,6 +38,10 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+      # Generated per run, never written into the workflow — a secret pasted
+      # into a file is a secret in every fork and every log.
+      - name: Generate the session secret for this run
+        run: echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
       - name: Install
         run: npm ci
       - name: Typecheck

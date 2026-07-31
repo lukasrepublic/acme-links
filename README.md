@@ -55,6 +55,29 @@ Each tutorial step ends at a tagged, checkout-able commit:
 | `step-6` | `auth`, `create-link`, `dashboard` merged in the autonomous wave; the full app builds. |
 | `step-7` | [`.foundry/build-provenance.yaml`](.foundry/build-provenance.yaml) pins every merged atom to its frozen, operator-authorized contract. |
 
+## Running it somewhere real
+
+This is a teaching exhibit, and it is honest about what that means. Before you put
+it on the internet:
+
+- **TLS is required off localhost.** Session cookies are issued `Secure`, and browsers
+  only treat `localhost` as a trustworthy origin. Served over plain HTTP on any other
+  host, the browser drops the cookie and login silently does nothing.
+- **`BETTER_AUTH_SECRET` must be set.** The app refuses to start without it rather than
+  falling back to a library default that everyone can read.
+- **The rate limiter is in-memory and per process** — honest for one instance, not for a
+  fleet. It deliberately ignores `x-forwarded-for` (a client can set that header to
+  anything, so keying on it would hand an attacker unlimited guesses); set
+  `TRUST_PROXY=1` only when a proxy *you control* overwrites the header.
+- **Signup is not flood-limited, and a duplicate signup returns `409`** — which is an
+  account-enumeration oracle. Both are deliberate: the 409 is what the acceptance
+  contract specifies because it makes the tutorial's behavior legible. The
+  industry alternative is a generic `200` plus a confirmation email; that is the right
+  choice for a production signup and the wrong one for a worked example.
+- **Sessions are not revoked in bulk.** A new login mints a new token, but existing
+  sessions live out their 7 days; there is no "log out everywhere" and no eviction on
+  password change.
+
 ## Layout
 
 ```

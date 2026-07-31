@@ -192,6 +192,51 @@ test("AC-AUTH-9: repeated failed logins are rate-limited with 429", async ({
   expect(limited, "the failure threshold must trip a 429").toBe(true);
 });
 
+test("SECURITY: a cross-site POST to /login or /signup is refused (login CSRF)", async ({
+  request,
+}) => {
+  // These routes call Better Auth's server API directly, so the origin check
+  // its mounted router applies is not in play — the handlers carry it.
+  // Without it, evil.com signs a visitor into the ATTACKER's account.
+  for (const path of ["/login", "/signup"]) {
+    const res = await request.post(path, {
+      headers: {
+        origin: "https://evil.example",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      data: "email=attacker@evil.example&password=hunter2pass",
+    });
+    expect(res.status(), `${path} must refuse a cross-site POST`).toBe(403);
+    const cookies = res
+      .headersArray()
+      .filter((h) => h.name.toLowerCase() === "set-cookie");
+    expect(cookies, "a refused request must set no session").toHaveLength(0);
+  }
+});
+
+test("SECURITY: the login limiter is not defeated by a spoofed x-forwarded-for", async ({
+  request,
+}) => {
+  const email = uniqueEmail();
+  await request.post("/signup", { data: { email, password: PASSWORD } });
+
+  let limited = false;
+  for (let i = 0; i < 8; i++) {
+    const res = await request.post("/login", {
+      // A client-supplied XFF must not mint a fresh bucket per attempt.
+      headers: { "x-forwarded-for": `203.0.113.${i}` },
+      data: { email, password: "definitely-wrong" },
+    });
+    if (res.status() === 429) {
+      limited = true;
+      break;
+    }
+  }
+  expect(limited, "rotating x-forwarded-for must not buy extra guesses").toBe(
+    true,
+  );
+});
+
 async function dbQuery(
   sql: string,
   params: unknown[],
