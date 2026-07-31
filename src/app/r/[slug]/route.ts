@@ -16,14 +16,18 @@ function notFound(): Response {
   });
 }
 
-function isSafeTarget(target: string): boolean {
-  // AC-RESOLVE-2: read-side scheme guard — never emit a non-http(s) Location,
-  // even if a dangerous target somehow reached the database.
+/** AC-RESOLVE-2: read-side guard — never emit a dangerous or non-canonical
+ *  Location, whatever reached the database. Returns the canonical URL to send,
+ *  or null to 404. Re-canonicalizing here means a row written before the
+ *  write-side policy existed (or by any other path) still cannot smuggle
+ *  header-terminating bytes into the response. */
+function safeTarget(target: string): string | null {
   try {
     const url = new URL(target);
-    return url.protocol === "http:" || url.protocol === "https:";
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.href;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -41,7 +45,8 @@ export async function GET(
     .limit(1);
   const found = rows[0];
   if (!found) return notFound();
-  if (!isSafeTarget(found.targetUrl)) return notFound();
+  const target = safeTarget(found.targetUrl);
+  if (target === null) return notFound();
 
   // AC-RESOLVE-3: a single DB-level increment — concurrent resolves never
   // lose updates (no read-modify-write).
@@ -53,7 +58,7 @@ export async function GET(
   return new Response(null, {
     status: 302,
     headers: {
-      Location: found.targetUrl,
+      Location: target,
       // AC-RESOLVE-6: a cached redirect is a poisoned redirect.
       "Cache-Control": "no-store",
     },

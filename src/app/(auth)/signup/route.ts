@@ -10,7 +10,7 @@ import {
 import {
   clientKey,
   isRateLimited,
-  recordFailure,
+  recordEvent,
 } from "@/lib/auth/rate-limit";
 
 function appBase(): string {
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       res,
     );
   }
-  recordFailure(key);
+  recordEvent(key);
   if (res.status === 422) {
     // AC-AUTH-3: duplicate email — conflict, no additional user.
     return jsonWithCookies({ error: "account already exists" }, 409);

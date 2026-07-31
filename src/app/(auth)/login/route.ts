@@ -9,7 +9,7 @@ import {
 import {
   clientKey,
   isRateLimited,
-  recordFailure,
+  recordEvent,
 } from "@/lib/auth/rate-limit";
 
 // AC-AUTH-5: one uniform body for every credential failure — no oracle for
@@ -57,6 +57,6 @@ export async function POST(req: Request) {
     return jsonWithCookies({ error: "login failed" }, 500);
   }
   // AC-AUTH-5: every credential failure is the same 401 — no oracle.
-  recordFailure(key);
+  recordEvent(key);
   return jsonWithCookies(INVALID, 401);
 }

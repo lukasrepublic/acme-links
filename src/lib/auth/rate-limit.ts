@@ -39,11 +39,15 @@ function recentFailures(key: string): number[] {
   return recent;
 }
 
-export function isRateLimited(key: string): boolean {
-  return recentFailures(key).length >= MAX_FAILURES;
+/** Credential surfaces use the default; other surfaces pass their own bound
+ *  (a link-creation cap and a password-guess cap are not the same number). */
+export function isRateLimited(key: string, max: number = MAX_FAILURES): boolean {
+  return recentFailures(key).length >= max;
 }
 
-export function recordFailure(key: string): void {
+/** Record one countable event against a key (a credential failure, or a
+ *  successful creation — the caller decides what its bound counts). */
+export function recordEvent(key: string): void {
   const recent = recentFailures(key);
   if (!failures.has(key) && failures.size >= MAX_TRACKED_KEYS) {
     // Shed the oldest tracked key rather than growing without bound.
