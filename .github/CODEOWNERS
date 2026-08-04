@@ -1,0 +1,24 @@
+# Code owners for acme-links (the worked example / public exhibit).
+#
+# WHAT THIS DOES AND DOES NOT DO — stated plainly, because a CODEOWNERS file people believe is
+# enforcing when it is not is worse than no file at all.
+#
+# GitHub only *requires* code-owner review when the branch protection rule for `main` sets
+# `require_code_owner_review: true`. It is currently FALSE here (solo-operator model), so this
+# file requests review and records privileged surface; it becomes ENFORCING with no further edit
+# the day a second maintainer exists.
+
+* @lukasrepublic
+
+# CI — the contract journeys ARE this exhibit's central claim (the money shot is a real red-then-
+# green run in this repo's history). A change here changes what the exhibit proves.
+/.github/                       @lukasrepublic
+
+# The build-provenance pin: the file that ties this exhibit to the workspace commit its atoms were
+# authorized against, and whose own header carries a verification recipe a reader may run.
+/.foundry/build-provenance.yaml @lukasrepublic
+
+# Auth and the redirect resolver — the three security-review Blocks found during the build all
+# landed in these paths (login CSRF, header-keyed rate limiting, parsed-vs-stored URL).
+/src/**/auth/                   @lukasrepublic
+/src/**/r/                      @lukasrepublic
